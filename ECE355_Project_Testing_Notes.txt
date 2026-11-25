@@ -1,0 +1,50 @@
+ECE 355 PWM PROJECT — LAB TEST NOTES
+====================================
+FILE: ECE355_Project_Final_Improved.c
+STATUS: Hardware integration candidate; not compiled or bench-tested here.
+
+1. Back up the team's original main.c. Copy the new file contents into the
+   Eclipse project's main.c. This version uses CMSIS registers and does NOT
+   require the STM32 HAL driver. Check the existing project's include paths.
+2. Build. If there are compiler errors, keep the exact error lines.
+3. Confirm the 48 MHz clock and that TIM3 counts at 1 kHz. The debounce uses
+   TIM3's free-running 1 ms counter; there is no HAL_GetTick() dependency.
+4. Check the USER button: on STM32F0 Discovery PA0 normally goes HIGH when
+   pressed, so the EXTI0 rising trigger is used. If your board differs, verify
+   the actual electrical polarity with a meter before changing it.
+5. Confirm PB2/PB3 input signal levels never exceed the STM32 GPIO limits.
+   Function Generator SYNC should be 0..3.3 V; level-shift 555 output if needed.
+6. Start with the function generator on PB2 at 1 kHz, press USER button to
+   select GEN (PC8 blue LED); check displayed frequency.
+7. Press USER again to select 555 (PC9 green LED); verify the 555 output on an
+   oscilloscope and compare to the displayed frequency.
+8. Turn the POT; verify PA1 voltage, PA4 DAC output voltage, and actual 555
+   response. POT_MAX_OHMS=5000 is an ASSUMPTION, not a measured component value.
+9. The 4N35 input LED MUST have a suitable current-limiting resistor; do not
+   connect PA4 directly to the LED. Check 555 voltage and isolation wiring.
+10. OLED: SPI2 uses PB13/PB15 AF0 and PB8/9/11 controls. Display code uses
+    SSD1306 page addressing and a +2 column offset inherited from lab sample.
+    The actual PBMCUSLK module may need its original OLED initialization
+    command sequence; if blank, compare with known-working example first.
+11. Test debounce with repeated short button presses: one source change per
+    press. It ignores repeated edges within 50 ms, but is not a full release-
+    detection state machine. Long/noisy presses may require release validation.
+12. The overflow handler INVALIDATES the sample, rather than extending the
+    32-bit timer with an overflow count. The theoretical limit at 48 MHz is
+    about 89.48 seconds per period, or 0.01118 Hz, assuming TIM2 really runs
+    at 48 MHz. The actual reliable range must be measured on the hardware.
+13. No duty-cycle measurement is implemented: the assignment asks the DAC/
+    4N35 circuit to CONTROL the 555 duty cycle, and the firmware to measure
+    frequency. Confirm your TA's precise rubric if duty-cycle display is needed.
+14. Do not claim full functionality until compile, display, ADC, DAC, button,
+    source switching, PWM and safety checks all pass.
+
+IMPORTANT DESIGN ASSUMPTIONS:
+- POT_MAX_OHMS = 5000; resistance proportional to ADC voltage.
+- DAC output equals ADC code; this is NOT automatically calibrated to 4N35
+  current or the 555 frequency/duty response.
+- USER button is active-high on the STM32F0 Discovery board.
+- SPI2 OLED commands and column offset match the actual PBMCUSLK module.
+
+Minimum Frequency Measured - 2 Hz
+Maximum Frequency Measured - 400 MHz
